@@ -3,7 +3,8 @@ import { View, StyleSheet, Button, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
-import { supabase } from "@/lib/supabase"; // Make sure this path is correct
+import { supabase } from "@/lib/supabase";
+import GitHubConnectCard from "@/components/GitHubConnectCard"; // Import the GitHubConnectCard component
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -49,6 +50,9 @@ export default function SettingsScreen() {
             /* Add privacy settings logic */
           }}
         />
+
+        <ThemedText style={styles.sectionTitle}>Integrations</ThemedText>
+        <GitHubConnectCard />
 
         <ThemedText style={styles.sectionTitle}>Support</ThemedText>
         <Button
