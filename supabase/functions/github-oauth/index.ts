@@ -37,20 +37,11 @@ serve(async (req) => {
       });
     }
 
-    const payload = await req.json();
-    const { code, redirectUri } = payload;
+    const { searchParams } = new URL(req.url);
+    const code = searchParams.get("code");
 
-    if (!code || !redirectUri) {
-      return new Response(JSON.stringify({ error: "Missing code or redirectUri" }), {
-        status: 400,
-        headers,
-      });
-    }
-
-    // Validate redirectUri
-    const validRedirectUri = "https://auth.expo.io/@one-world-community/one-world-community";
-    if (redirectUri !== validRedirectUri) {
-      return new Response(JSON.stringify({ error: "Invalid redirectUri" }), {
+    if (!code) {
+      return new Response(JSON.stringify({ error: "Missing authorization code" }), {
         status: 400,
         headers,
       });
@@ -65,8 +56,7 @@ serve(async (req) => {
       body: JSON.stringify({
         client_id: GITHUB_CLIENT_ID,
         client_secret: GITHUB_CLIENT_SECRET,
-        code: code,
-        redirect_uri: redirectUri,
+        code,
       }),
     });
 
