@@ -128,20 +128,51 @@ export async function enableGitHubPages(owner: string, repo: string, maxRetries 
   throw new Error("Timeout: Repository not ready after multiple retries");
 }
 
-export async function checkGitHubPagesStatus(owner: string, repo: string, maxRetries = 20, delay = 10000) {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const response = await githubRequest(`/repos/${owner}/${repo}/pages`);
-      console.log("GitHub Pages status:", response.status);
-      if (response.status === "built") {
-        return true;
+export async function getLatestWorkflowRun(owner: string, repo: string) {
+  const response = await githubRequest(`/repos/${owner}/${repo}/actions/runs?per_page=1`);
+  return response.workflow_runs && response.workflow_runs.length > 0 ? response.workflow_runs[0] : null;
+}
+
+export async function checkWorkflowStatus(
+  owner: string,
+  repo: string,
+  maxWaitTime = 120000, // 2 minutes
+  checkInterval = 5000, // 5 seconds
+): Promise<{ status: "success" | "failure" | "in_progress" | "not_found"; details: any }> {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < maxWaitTime) {
+    const latestRun = await getLatestWorkflowRun(owner, repo);
+
+    if (latestRun) {
+      console.log(`Workflow status: ${latestRun.status}, conclusion: ${latestRun.conclusion}`);
+
+      if (latestRun.status === "completed") {
+        return {
+          status: latestRun.conclusion === "success" ? "success" : "failure",
+          details: latestRun,
+        };
+      } else if (latestRun.status === "in_progress") {
+        return { status: "in_progress", details: latestRun };
       }
-    } catch (error) {
-      console.log("GitHub Pages not ready yet, retrying...");
+    } else {
+      console.log("No workflow run found yet. Waiting...");
     }
-    await new Promise((resolve) => setTimeout(resolve, delay));
+
+    await new Promise((resolve) => setTimeout(resolve, checkInterval));
   }
-  return false;
+
+  return { status: "not_found", details: null };
+}
+
+export async function getPagesUrl(owner: string, repo: string): Promise<string | null> {
+  try {
+    const response = await githubRequest(`/repos/${owner}/${repo}/pages`);
+    return response.html_url || null;
+  } catch (error) {
+    console.error("Error getting Pages URL:", error);
+    return null;
+  }
 }
 
 export async function getTemplates() {

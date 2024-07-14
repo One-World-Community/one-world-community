@@ -1,125 +1,162 @@
-// File: lib/github-api.ts
-
+import React, { useState, useEffect } from "react";
+import { View, Button, Alert, Platform } from "react-native";
 import { supabase } from "@/lib/supabase";
+import * as WebBrowser from "expo-web-browser";
+import { useAuthRequest, revokeAsync, ResponseType } from "expo-auth-session";
+import * as AuthSession from "expo-auth-session";
 
-const BASE_URL = "https://api.github.com";
+WebBrowser.maybeCompleteAuthSession();
 
-async function getAuthToken(): Promise<string> {
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
-  const githubToken = userData.user?.user_metadata.github_access_token;
-  if (!githubToken) {
-    throw new Error("GitHub token not found");
-  }
-  return githubToken;
-}
+const discovery = {
+  authorizationEndpoint: "https://github.com/login/oauth/authorize",
+  tokenEndpoint: "https://github.com/login/oauth/access_token",
+  revocationEndpoint: `https://github.com/settings/connections/applications/${process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID}`,
+};
 
-async function githubRequest(endpoint: string, method: string = "GET", body?: any) {
-  const token = await getAuthToken();
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github.v3+json",
-      "Content-Type": "application/json",
+export default function GitHubConnectCard() {
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [response, setResponse] = useState(null);
+
+  const redirectUri = "https://auth.expo.io/@one-world-community/one-world-community";
+
+  console.log("Using Redirect URI:", redirectUri);
+
+  const [request, _, promptAsync] = useAuthRequest(
+    {
+      clientId: process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID,
+      scopes: ["repo"],
+      redirectUri,
+      responseType: ResponseType.Code,
     },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`GitHub API error: ${response.status} - ${JSON.stringify(errorData)}`);
-  }
-  return response.json();
-}
+    discovery,
+    {
+      useProxy: true,
+      projectNameForProxy: "@one-world-community/one-world-community",
+    },
+  );
 
-export async function getAuthenticatedUser() {
-  return githubRequest("/user");
-}
+  console.log("Auth request object:", JSON.stringify(request, null, 2));
 
-export async function createRepoFromTemplate(
-  templateOwner: string,
-  templateRepo: string,
-  newRepoName: string,
-  description: string,
-) {
-  const userInfo = await getAuthenticatedUser();
-  return githubRequest(`/repos/${templateOwner}/${templateRepo}/generate`, "POST", {
-    owner: userInfo.login,
-    name: newRepoName,
-    description: description,
-    private: false,
-    include_all_branches: false,
-  });
-}
-
-async function checkRepoReady(owner: string, repo: string): Promise<boolean> {
-  try {
-    await githubRequest(`/repos/${owner}/${repo}/branches`);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-export async function enableGitHubPages(owner: string, repo: string, maxRetries = 20, delay = 5000) {
-  for (let i = 0; i < maxRetries; i++) {
-    if (await checkRepoReady(owner, repo)) {
-      try {
-        const response = await githubRequest(`/repos/${owner}/${repo}/pages`, "POST", {
-          source: {
-            branch: "main",
-            path: "/",
-          },
-          build_type: "workflow",
-        });
-        console.log("GitHub Pages enabled successfully:", response);
-        return response;
-      } catch (error) {
-        console.error("Error enabling GitHub Pages:", error);
-        if (error.message.includes("409")) {
-          console.log("GitHub Pages already exists. Attempting to update...");
-          try {
-            const updateResponse = await githubRequest(`/repos/${owner}/${repo}/pages`, "PUT", {
-              source: {
-                branch: "main",
-                path: "/",
-              },
-              build_type: "workflow",
-            });
-            console.log("GitHub Pages updated successfully:", updateResponse);
-            return updateResponse;
-          } catch (updateError) {
-            console.error("Error updating GitHub Pages:", updateError);
-            throw updateError;
-          }
-        }
-        throw error;
-      }
+  useEffect(() => {
+    console.log("Auth response:", JSON.stringify(response, null, 2));
+    if (response?.type === "success") {
+      const { code } = response.params;
+      console.log("Received authorization code:", code);
+      exchangeCodeForToken(code);
+    } else if (response?.type === "error") {
+      console.error("Auth error:", response.error);
+      console.error("Full response:", JSON.stringify(response, null, 2));
     }
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-  throw new Error("Timeout: Repository not ready after multiple retries");
-}
+  }, [response]);
 
-export async function checkGitHubPagesStatus(owner: string, repo: string, maxRetries = 20, delay = 10000) {
-  for (let i = 0; i < maxRetries; i++) {
+  const exchangeCodeForToken = async (code) => {
     try {
-      const response = await githubRequest(`/repos/${owner}/${repo}/pages`);
-      console.log("GitHub Pages status:", response.status);
-      if (response.status === "built") {
-        return true;
+      const tokenResponse = await fetch(
+        `https://zmvmrezwgkiksstvmlkq.supabase.co/functions/v1/github-oauth?code=${encodeURIComponent(code)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const tokenData = await tokenResponse.json();
+      if (tokenData.access_token) {
+        console.log("Received access token:", tokenData.access_token);
+        handleGitHubToken(tokenData.access_token);
+      } else {
+        console.error("Error exchanging code for token:", tokenData);
       }
     } catch (error) {
-      console.log("GitHub Pages not ready yet, retrying...");
+      console.error("Error exchanging code for token:", error);
     }
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-  return false;
-}
+  };
 
-export async function getTemplates() {
-  return [
-    { name: "Jekyll Blog Template", value: "one-world-community/owc-blog-template" },
-    // Add more templates here as needed
-  ];
+  const handleGitHubToken = async (access_token) => {
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { github_access_token: access_token },
+      });
+      if (updateError) throw updateError;
+      setIsConnected(true);
+      Alert.alert("Success", "GitHub account connected successfully!");
+    } catch (error) {
+      console.error("Error in handleGitHubToken:", error);
+      Alert.alert("Error", "Failed to connect GitHub account. Please try again.");
+    }
+  };
+
+  const initiateGitHubOAuth = async () => {
+    setIsConnecting(true);
+    try {
+      console.log("Starting OAuth flow with options:", {
+        clientId: process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID,
+        redirectUri,
+        scopes: ["repo"],
+      });
+
+      const result = await promptAsync();
+      console.log("OAuth result:", JSON.stringify(result, null, 2));
+      if (result.type === "success") {
+        setResponse(result);
+        console.log("OAuth flow successful");
+      } else {
+        console.log("OAuth flow unsuccessful. Full result:", JSON.stringify(result, null, 2));
+        throw new Error(`GitHub OAuth flow was not successful. Type: ${result.type}`);
+      }
+    } catch (error) {
+      console.error("Detailed error in initiateGitHubOAuth:", error);
+      Alert.alert("Error", "Failed to connect GitHub account. Please try again.");
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const revokeAuthentication = async () => {
+    try {
+      await WebBrowser.dismissBrowser();
+
+      const { error } = await supabase.auth.updateUser({
+        data: { github_access_token: null },
+      });
+      if (error) throw error;
+
+      if (response?.params?.access_token) {
+        await revokeAsync(
+          {
+            token: response.params.access_token,
+            clientId: process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID,
+          },
+          discovery,
+        );
+      }
+
+      AuthSession.dismiss();
+
+      if (Platform.OS === "ios") {
+        await WebBrowser.coolDownAsync();
+      }
+
+      setIsConnected(false);
+      setResponse(null);
+
+      Alert.alert("Success", "GitHub authentication revoked and session reset!");
+    } catch (error) {
+      console.error("Error in revokeAuthentication:", error);
+      Alert.alert("Error", "Failed to revoke authentication. Please try again.");
+    }
+  };
+
+  return (
+    <View>
+      <Button
+        title={isConnecting ? "Connecting..." : "Connect GitHub"}
+        onPress={initiateGitHubOAuth}
+        disabled={isConnecting || !request}
+      />
+      <Button title="Revoke Authentication" onPress={revokeAuthentication} disabled={isConnecting} />
+    </View>
+  );
 }
