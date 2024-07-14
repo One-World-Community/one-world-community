@@ -32,6 +32,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="post"
+        options={{
+          title: "Post",
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? "document" : "documents-outline"} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",

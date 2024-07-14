@@ -1,6 +1,6 @@
 // File: lib/github-api.ts
 
-import { supabase } from "@/lib/supabase";
+import { supabase } from "./supabase";
 
 const BASE_URL = "https://api.github.com";
 
@@ -58,6 +58,17 @@ async function checkRepoReady(owner: string, repo: string): Promise<boolean> {
     return true;
   } catch (error) {
     return false;
+  }
+}
+
+async function getGitHubPagesInfo(owner: string, repo: string) {
+  try {
+    return await githubRequest(`/repos/${owner}/${repo}/pages`);
+  } catch (error) {
+    if (error.message.includes("404")) {
+      return null; // Pages not configured yet
+    }
+    throw error;
   }
 }
 
@@ -122,4 +133,12 @@ export async function getTemplates() {
     { name: "Jekyll Blog Template", value: "one-world-community/owc-blog-template" },
     // Add more templates here as needed
   ];
+}
+
+// New function to enable GitHub Actions
+export async function enableActionsForRepo(owner: string, repo: string) {
+  return githubRequest(`/repos/${owner}/${repo}/actions/permissions`, "PUT", {
+    enabled: true,
+    allowed_actions: "all",
+  });
 }
