@@ -1,5 +1,3 @@
-// File: tabs/PostsScreen.tsx
-
 import React, { useState, useEffect } from "react";
 import { StyleSheet, Button, ActivityIndicator, TextInput, Alert, ScrollView, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
@@ -69,16 +67,19 @@ export default function PostsScreen() {
       );
       console.log("Repository created successfully from template. New repo name:", newRepo.name);
 
-      // Enable Actions for the new repository
-      await enableActionsForRepo(newRepo.owner.login, newRepo.name);
-      console.log("GitHub Actions enabled for the repository");
+      try {
+        await enableActionsForRepo(newRepo.owner.login, newRepo.name);
+        console.log("GitHub Actions enabled for the repository");
+      } catch (actionsError) {
+        console.error("Error enabling GitHub Actions:", actionsError);
+      }
 
       setIsLoading(false);
       setIsEnablingPages(true);
 
       try {
-        const pagesResponse = await enableGitHubPages(newRepo.owner.login, newRepo.name);
-        console.log("GitHub Pages response:", pagesResponse);
+        await enableGitHubPages(newRepo.owner.login, newRepo.name);
+        console.log("GitHub Pages enabled and configured to deploy from Actions workflow");
 
         const isPagesBulit = await checkGitHubPagesStatus(newRepo.owner.login, newRepo.name);
 
@@ -194,8 +195,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     width: "80%",
-    backgroundColor: "#f9f9f9", // Light off-white background
-    color: "#000", // Black text color
+    backgroundColor: "#f9f9f9",
+    color: "#000",
   },
   multilineInput: {
     height: 80,
@@ -207,10 +208,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: "80%",
     marginBottom: 12,
-    backgroundColor: "#f9f9f9", // Light off-white background
+    backgroundColor: "#f9f9f9",
   },
   picker: {
     width: "100%",
-    color: "#000", // Black text color
+    color: "#000",
   },
 });

@@ -1,5 +1,3 @@
-// File: lib/github-api.ts
-
 import { supabase } from "./supabase";
 
 const BASE_URL = "https://api.github.com";
@@ -25,11 +23,31 @@ async function githubRequest(endpoint: string, method: string = "GET", body?: an
     },
     body: body ? JSON.stringify(body) : undefined,
   });
+
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`GitHub API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    const clonedResponse = response.clone();
+    try {
+      const errorData = await clonedResponse.json();
+      console.error(`GitHub API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      throw new Error(`GitHub API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    } catch (parseError) {
+      console.error(`Failed to parse error response: ${await clonedResponse.text()}`);
+      throw new Error(`GitHub API error: ${response.status} - Unable to parse error response`);
+    }
   }
-  return response.json();
+
+  try {
+    const responseText = await response.text();
+    if (!responseText) {
+      console.warn("Empty response from GitHub API");
+      return null;
+    }
+    return JSON.parse(responseText);
+  } catch (error) {
+    console.error("Error parsing JSON response:", error);
+    console.error("Raw response:", await response.text());
+    throw error;
+  }
 }
 
 export async function getAuthenticatedUser() {
@@ -79,7 +97,6 @@ export async function enableGitHubPages(owner: string, repo: string, maxRetries 
         const response = await githubRequest(`/repos/${owner}/${repo}/pages`, "POST", {
           source: {
             branch: "main",
-            path: "/",
           },
           build_type: "workflow",
         });
@@ -93,7 +110,6 @@ export async function enableGitHubPages(owner: string, repo: string, maxRetries 
             const updateResponse = await githubRequest(`/repos/${owner}/${repo}/pages`, "PUT", {
               source: {
                 branch: "main",
-                path: "/",
               },
               build_type: "workflow",
             });
@@ -135,7 +151,6 @@ export async function getTemplates() {
   ];
 }
 
-// New function to enable GitHub Actions
 export async function enableActionsForRepo(owner: string, repo: string) {
   return githubRequest(`/repos/${owner}/${repo}/actions/permissions`, "PUT", {
     enabled: true,
