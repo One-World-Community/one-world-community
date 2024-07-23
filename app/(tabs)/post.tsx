@@ -56,7 +56,7 @@ const CustomAlert = ({ visible, title, message, buttons, onDismiss }) => {
   );
 };
 
-export default function PostsScreen() {
+export default function SetupBlogScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");

@@ -177,7 +177,7 @@ export async function getPagesUrl(owner: string, repo: string): Promise<string |
 
 export async function getTemplates() {
   return [
-    { name: "Jekyll Blog Template", value: "one-world-community/owc-blog-template" },
+    { name: "OWC Blog Template", value: "one-world-community/owc-blog-template" },
     // Add more templates here as needed
   ];
 }

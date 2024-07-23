@@ -1,5 +1,4 @@
 import { Platform } from "react-native";
-
 const isClient = typeof window !== "undefined";
 const hasAsyncStorage = typeof AsyncStorage !== "undefined";
 
