@@ -24,30 +24,14 @@ async function githubRequest(endpoint: string, method: string = "GET", body?: an
     body: body ? JSON.stringify(body) : undefined,
   });
 
+  const responseData = await response.json();
+
   if (!response.ok) {
-    const clonedResponse = response.clone();
-    try {
-      const errorData = await clonedResponse.json();
-      console.error(`GitHub API error: ${response.status} - ${JSON.stringify(errorData)}`);
-      throw new Error(`GitHub API error: ${response.status} - ${JSON.stringify(errorData)}`);
-    } catch (parseError) {
-      console.error(`Failed to parse error response: ${await clonedResponse.text()}`);
-      throw new Error(`GitHub API error: ${response.status} - Unable to parse error response`);
-    }
+    console.error(`GitHub API error: ${response.status} - ${JSON.stringify(responseData)}`);
+    throw new Error(`GitHub API error: ${response.status} - ${JSON.stringify(responseData)}`);
   }
 
-  try {
-    const responseText = await response.text();
-    if (!responseText) {
-      console.warn("Empty response from GitHub API");
-      return null;
-    }
-    return JSON.parse(responseText);
-  } catch (error) {
-    console.error("Error parsing JSON response:", error);
-    console.error("Raw response:", await response.text());
-    throw error;
-  }
+  return responseData;
 }
 
 export async function getAuthenticatedUser() {
@@ -187,6 +171,36 @@ export async function enableActionsForRepo(owner: string, repo: string) {
     enabled: true,
     allowed_actions: "all",
   });
+}
+
+function base64Encode(str: string): string {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+export async function commitFile(owner: string, repo: string, path: string, content: string, message: string) {
+  try {
+    // First, get the current file (if it exists) to get its SHA
+    let sha: string | undefined;
+    try {
+      const currentFile = await githubRequest(`/repos/${owner}/${repo}/contents/${path}`);
+      sha = currentFile.sha;
+    } catch (error) {
+      // If the file doesn't exist, we don't need the SHA
+      console.log("File doesn't exist yet, creating new file");
+    }
+
+    // Commit the file
+    const response = await githubRequest(`/repos/${owner}/${repo}/contents/${path}`, "PUT", {
+      message,
+      content: base64Encode(content),
+      sha,
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error committing file:", error);
+    throw error;
+  }
 }
 
 export async function updateUserMetadata(blogUrl: string) {

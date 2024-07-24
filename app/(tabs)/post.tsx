@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import GithubSetupBlog from "@/components/GithubSetupBlog";
+import AddBlogPost from "@/components/AddBlogPost";
 
 const PostsScreen = () => {
   const [blogUrl, setBlogUrl] = useState<string | null>(null);
@@ -21,7 +22,6 @@ const PostsScreen = () => {
         error,
       } = await supabase.auth.getUser();
       if (error) throw error;
-
       const blogUrl = user?.user_metadata?.blog_url;
       setBlogUrl(blogUrl || null);
     } catch (error) {
@@ -35,6 +35,11 @@ const PostsScreen = () => {
     setBlogUrl(newBlogUrl);
   };
 
+  const handlePostAdded = () => {
+    // Optionally refresh the blog or update state here
+    console.log("Post added successfully");
+  };
+
   if (isLoading) {
     return (
       <ThemedView style={styles.container}>
@@ -44,17 +49,19 @@ const PostsScreen = () => {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      {blogUrl ? (
-        <View>
-          <ThemedText>Your blog is live at:</ThemedText>
-          <ThemedText style={styles.blogUrl}>{blogUrl}</ThemedText>
-          {/* Add components for managing blog posts here */}
-        </View>
-      ) : (
-        <GithubSetupBlog onSetupComplete={handleSetupComplete} />
-      )}
-    </ThemedView>
+    <ScrollView>
+      <ThemedView style={styles.container}>
+        {blogUrl ? (
+          <View>
+            <ThemedText>Your blog is live at:</ThemedText>
+            <ThemedText style={styles.blogUrl}>{blogUrl}</ThemedText>
+            <AddBlogPost onPostAdded={handlePostAdded} />
+          </View>
+        ) : (
+          <GithubSetupBlog onSetupComplete={handleSetupComplete} />
+        )}
+      </ThemedView>
+    </ScrollView>
   );
 };
 
@@ -67,6 +74,7 @@ const styles = StyleSheet.create({
   },
   blogUrl: {
     marginTop: 10,
+    marginBottom: 20,
     fontWeight: "bold",
   },
 });
