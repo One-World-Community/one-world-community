@@ -188,3 +188,25 @@ export async function enableActionsForRepo(owner: string, repo: string) {
     allowed_actions: "all",
   });
 }
+
+export async function updateUserMetadata(blogUrl: string) {
+  try {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) throw error;
+
+    const { data, error: updateError } = await supabase.auth.updateUser({
+      data: { blog_url: blogUrl },
+    });
+
+    if (updateError) throw updateError;
+
+    console.log("User metadata updated successfully");
+    return data;
+  } catch (error) {
+    console.error("Error updating user metadata:", error);
+    throw error;
+  }
+}
