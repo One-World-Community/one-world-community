@@ -1,35 +1,36 @@
 import { Platform } from "react-native";
-const isClient = typeof window !== "undefined";
-const hasAsyncStorage = typeof AsyncStorage !== "undefined";
 
+const isWeb = Platform.OS === "web";
 const inMemoryStorage: Record<string, string> = {};
+
+let AsyncStorage: any;
+if (!isWeb) {
+  AsyncStorage = require("@react-native-async-storage/async-storage").default;
+}
 
 const storage = {
   getItem: async (key: string): Promise<string | null> => {
-    if (isClient) {
+    if (isWeb) {
       return localStorage.getItem(key);
-    } else if (hasAsyncStorage) {
-      const AsyncStorage = require("@react-native-async-storage/async-storage").default;
+    } else if (AsyncStorage) {
       return await AsyncStorage.getItem(key);
     } else {
       return inMemoryStorage[key] || null;
     }
   },
   setItem: async (key: string, value: string): Promise<void> => {
-    if (isClient) {
+    if (isWeb) {
       localStorage.setItem(key, value);
-    } else if (hasAsyncStorage) {
-      const AsyncStorage = require("@react-native-async-storage/async-storage").default;
+    } else if (AsyncStorage) {
       await AsyncStorage.setItem(key, value);
     } else {
       inMemoryStorage[key] = value;
     }
   },
   removeItem: async (key: string): Promise<void> => {
-    if (isClient) {
+    if (isWeb) {
       localStorage.removeItem(key);
-    } else if (hasAsyncStorage) {
-      const AsyncStorage = require("@react-native-async-storage/async-storage").default;
+    } else if (AsyncStorage) {
       await AsyncStorage.removeItem(key);
     } else {
       delete inMemoryStorage[key];
