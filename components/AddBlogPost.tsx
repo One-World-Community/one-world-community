@@ -86,6 +86,7 @@ ${content}`;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 20,
   },
   title: {
@@ -94,15 +95,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    height: 40,
     borderColor: "gray",
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   contentInput: {
-    height: 200,
+    flex: 1,
     textAlignVertical: "top",
+    minHeight: 200,
   },
 });
 

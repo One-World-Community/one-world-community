@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { StyleSheet, ScrollView, View } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -36,7 +36,6 @@ const PostsScreen = () => {
   };
 
   const handlePostAdded = () => {
-    // Optionally refresh the blog or update state here
     console.log("Post added successfully");
   };
 
@@ -49,10 +48,10 @@ const PostsScreen = () => {
   }
 
   return (
-    <ScrollView>
-      <ThemedView style={styles.container}>
+    <ThemedView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {blogUrl ? (
-          <View>
+          <View style={styles.blogContent}>
             <ThemedText>Your blog is live at:</ThemedText>
             <ThemedText style={styles.blogUrl}>{blogUrl}</ThemedText>
             <AddBlogPost onPostAdded={handlePostAdded} />
@@ -60,16 +59,20 @@ const PostsScreen = () => {
         ) : (
           <GithubSetupBlog onSetupComplete={handleSetupComplete} />
         )}
-      </ThemedView>
-    </ScrollView>
+      </ScrollView>
+    </ThemedView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  blogContent: {
+    flex: 1,
     padding: 20,
   },
   blogUrl: {

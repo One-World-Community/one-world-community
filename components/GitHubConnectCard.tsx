@@ -18,7 +18,9 @@ export default function GitHubConnectCard() {
   const [isConnected, setIsConnected] = useState(false);
   const [response, setResponse] = useState(null);
 
-  const redirectUri = "https://auth.expo.io/@one-world-community/one-world-community";
+  const redirectUri = AuthSession.makeRedirectUri({
+    useProxy: true,
+  });
 
   console.log("Using Redirect URI:", redirectUri);
 

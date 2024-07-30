@@ -1,102 +1,203 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, Image, Platform } from 'react-native';
+import React, { useState } from "react";
+import { StyleSheet, FlatList, TextInput, View, Platform, useWindowDimensions, ImageComponent } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import CategoryChip from "@/components/CategoryChip";
+import ArticleCard from "@/components/ArticleCard";
+import CommunityFavorite from "@/components/CommunityFavorite";
+import TopicChip from "@/components/TopicChip";
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+// Placeholder data for categories and articles
+const categories = ["Technology", "Science", "Health", "Business", "Entertainment"];
+const articles = [
+  {
+    id: "1",
+    title: "The Future of AI in Healthcare",
+    description:
+      "Artificial Intelligence is revolutionizing the healthcare industry. From diagnosis to treatment, AI is making significant strides.",
+    image:
+      "https://plus.unsplash.com/premium_photo-1677269465314-d5d2247a0b0c?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8YWl8ZW58MHx8MHx8fDA%3D",
+    author: "John Doe",
+    date: "May 11",
+    readTime: "3 min read",
+    views: "3.4K",
+  },
+  {
+    id: "2",
+    title: "SpaceX Successfully Launches Starship",
+    description:
+      "In a historic moment for space exploration, SpaceX has successfully launched and landed its Starship spacecraft.",
+    image:
+      "https://plus.unsplash.com/premium_photo-1688575552472-45b0aa670f1e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c3RhcnNoaXB8ZW58MHx8MHx8fDA%3D",
+    author: "Jane Smith",
+    date: "Jan 8",
+    readTime: "5 min read",
+    views: "3.9K",
+  },
+  {
+    id: "3",
+    title: "The Rise of Sustainable Fashion",
+    description:
+      "More fashion brands are embracing sustainability, using eco-friendly materials and ethical production methods.",
+    author: "Alex Johnson",
+    date: "Feb 9",
+    readTime: "4 min read",
+    views: "11.1K",
+  },
+  // Add more placeholder articles as needed
+];
 
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={<Ionicons size={310} name="code-slash" style={styles.headerImage} />}>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
+const communityFavorites = [
+  { id: "1", author: "M. H. Rubin", title: "A New Language for Photography" },
+  { id: "2", author: "Kevin Beaumont in DoublePulsar", title: "What I learned from the Microsoft global IT outage" },
+  { id: "3", author: "Arbor Brookes", title: "The First Date Nobody's Talking About" },
+];
+
+const recommendedTopics = [
+  "Self Improvement",
+  "Machine Learning",
+  "Writing",
+  "Relationships",
+  "Python",
+  "JavaScript",
+  "Software Development",
+];
+
+export default function ExploreScreen() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const { width } = useWindowDimensions();
+
+  const isWeb = Platform.OS === "web";
+  const isSmallScreen = width < 768;
+
+  const toggleCategory = (category) => {
+    setSelectedCategories((prevSelected) =>
+      prevSelected.includes(category) ? prevSelected.filter((c) => c !== category) : [...prevSelected, category],
+    );
+  };
+
+  const renderCategories = () => (
+    <View style={styles.categoriesContainer}>
+      {categories.map((category) => (
+        <CategoryChip
+          key={category}
+          category={category}
+          isSelected={selectedCategories.includes(category)}
+          onToggle={() => toggleCategory(category)}
+        />
+      ))}
+    </View>
+  );
+
+  const renderContent = () => (
+    <>
+      <ThemedView style={styles.searchContainer}>
+        <Ionicons name="search" size={24} color="#999" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search articles..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText> library
-          to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+
+      {renderCategories()}
+
+      <FlatList
+        data={articles}
+        renderItem={({ item }) => <ArticleCard article={item} isWeb={isWeb} isSmallScreen={isSmallScreen} />}
+        keyExtractor={(item) => item.id}
+        style={styles.articleList}
+      />
+    </>
+  );
+
+  const renderSidebar = () => (
+    <ThemedView style={styles.sidebar}>
+      <ThemedText style={styles.sidebarTitle}>Community Favorites</ThemedText>
+      {communityFavorites.map((favorite) => (
+        <CommunityFavorite key={favorite.id} favorite={favorite} />
+      ))}
+      <ThemedText style={[styles.sidebarTitle, styles.topicsTitle]}>Recommended topics</ThemedText>
+      <View style={styles.topicsContainer}>
+        {recommendedTopics.map((topic, index) => (
+          <TopicChip key={index} topic={topic} />
+        ))}
+      </View>
+    </ThemedView>
+  );
+
+  return (
+    <ThemedView style={styles.container}>
+      {isWeb && !isSmallScreen ? (
+        <View style={styles.webContainer}>
+          <View style={styles.webMainContent}>{renderContent()}</View>
+          {renderSidebar()}
+        </View>
+      ) : (
+        <>
+          {renderContent()}
+          {renderSidebar()}
+        </>
+      )}
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    padding: 16,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  webContainer: {
+    flexDirection: "row",
+    flex: 1,
+  },
+  webMainContent: {
+    flex: 1,
+    marginRight: 20,
+  },
+  sidebar: {
+    width: 300,
+    padding: 20,
+    borderLeftWidth: 1,
+    borderLeftColor: "#eee",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 16,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  categoriesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 16,
+  },
+  articleList: {
+    flex: 1,
+  },
+  sidebarTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  topicsTitle: {
+    marginTop: 30,
+  },
+  topicsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
 });
