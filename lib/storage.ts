@@ -11,7 +11,7 @@ if (!isWeb) {
 const storage = {
   getItem: async (key: string): Promise<string | null> => {
     if (isWeb) {
-      return localStorage.getItem(key);
+      return typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
     } else if (AsyncStorage) {
       return await AsyncStorage.getItem(key);
     } else {
@@ -20,7 +20,9 @@ const storage = {
   },
   setItem: async (key: string, value: string): Promise<void> => {
     if (isWeb) {
-      localStorage.setItem(key, value);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(key, value);
+      }
     } else if (AsyncStorage) {
       await AsyncStorage.setItem(key, value);
     } else {
@@ -29,7 +31,9 @@ const storage = {
   },
   removeItem: async (key: string): Promise<void> => {
     if (isWeb) {
-      localStorage.removeItem(key);
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(key);
+      }
     } else if (AsyncStorage) {
       await AsyncStorage.removeItem(key);
     } else {
