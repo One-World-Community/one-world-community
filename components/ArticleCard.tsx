@@ -3,8 +3,10 @@ import { StyleSheet, View, Image, Platform } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Ionicons } from "@expo/vector-icons";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 const ArticleCard = ({ article, isWeb, isSmallScreen }) => {
+  const iconColor = useThemeColor({}, 'text');
   return (
     <ThemedView
       style={[
@@ -28,7 +30,7 @@ const ArticleCard = ({ article, isWeb, isSmallScreen }) => {
           <ThemedText style={styles.metaText}>
             {article.author} · {article.date} · {article.readTime} · {article.views} views
           </ThemedText>
-          <Ionicons name="bookmark-outline" size={24} color="#000" />
+          <Ionicons name="bookmark-outline" size={24} color={iconColor} />
         </View>
       </View>
     </ThemedView>

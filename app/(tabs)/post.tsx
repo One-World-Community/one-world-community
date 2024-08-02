@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, ScrollView, View } from "react-native";
+import { StyleSheet, ScrollView, View, Linking, TouchableOpacity } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -39,10 +39,16 @@ const PostsScreen = () => {
     console.log("Post added successfully");
   };
 
+  const handleUrlPress = () => {
+    if (blogUrl) {
+      Linking.openURL(blogUrl).catch((err) => console.error("Error opening URL:", err));
+    }
+  };
+
   if (isLoading) {
     return (
       <ThemedView style={styles.container}>
-        <ThemedText>Loading...</ThemedText>
+        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
       </ThemedView>
     );
   }
@@ -52,8 +58,10 @@ const PostsScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {blogUrl ? (
           <View style={styles.blogContent}>
-            <ThemedText>Your blog is live at:</ThemedText>
-            <ThemedText style={styles.blogUrl}>{blogUrl}</ThemedText>
+            <ThemedText style={styles.headerText}>Your blog is live at:</ThemedText>
+            <TouchableOpacity onPress={handleUrlPress}>
+              <ThemedText style={styles.blogUrl}>{blogUrl}</ThemedText>
+            </TouchableOpacity>
             <AddBlogPost onPostAdded={handlePostAdded} />
           </View>
         ) : (
@@ -79,6 +87,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
     fontWeight: "bold",
+    color: '#007AFF',
+    textDecorationLine: 'underline',
+  },
+  loadingText: {
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  headerText: {
+    fontSize: 20,
+    marginBottom: 10,
   },
 });
 

@@ -1,10 +1,12 @@
 import React from "react";
-import { View, StyleSheet, Button, Alert } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { supabase } from "@/lib/supabase";
-import GitHubConnectCard from "@/components/GitHubConnectCard"; // Import the GitHubConnectCard component
+import GitHubConnectCard from "@/components/GitHubConnectCard";
+import { Ionicons } from '@expo/vector-icons';
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -19,59 +21,40 @@ export default function SettingsScreen() {
     }
   };
 
+  const SettingItem = ({ title, icon, onPress }) => {
+    const iconColor = useThemeColor({}, 'text');
+    return (
+      <TouchableOpacity style={styles.settingItem} onPress={onPress}>
+        <Ionicons name={icon} size={24} color={iconColor} style={styles.icon} />
+        <ThemedText style={styles.settingText}>{title}</ThemedText>
+        <Ionicons name="chevron-forward" size={24} color={iconColor} style={styles.chevron} />
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Settings</ThemedText>
-      <View style={styles.settingsContainer}>
+      <ScrollView style={styles.settingsContainer}>
         <ThemedText style={styles.sectionTitle}>Account</ThemedText>
-        <Button
-          title="Edit Profile"
-          onPress={() => {
-            /* Add edit profile logic */
-          }}
-        />
-        <Button
-          title="Change Password"
-          onPress={() => {
-            /* Add change password logic */
-          }}
-        />
+        <SettingItem title="Edit Profile" icon="person-outline" onPress={() => {/* Add edit profile logic */}} />
+        <SettingItem title="Change Password" icon="lock-closed-outline" onPress={() => {/* Add change password logic */}} />
 
         <ThemedText style={styles.sectionTitle}>Preferences</ThemedText>
-        <Button
-          title="Notification Settings"
-          onPress={() => {
-            /* Add notification settings logic */
-          }}
-        />
-        <Button
-          title="Privacy Settings"
-          onPress={() => {
-            /* Add privacy settings logic */
-          }}
-        />
+        <SettingItem title="Notification Settings" icon="notifications-outline" onPress={() => {/* Add notification settings logic */}} />
+        <SettingItem title="Privacy Settings" icon="shield-outline" onPress={() => {/* Add privacy settings logic */}} />
 
         <ThemedText style={styles.sectionTitle}>Integrations</ThemedText>
         <GitHubConnectCard />
 
         <ThemedText style={styles.sectionTitle}>Support</ThemedText>
-        <Button
-          title="Help Center"
-          onPress={() => {
-            /* Add help center logic */
-          }}
-        />
-        <Button
-          title="Contact Us"
-          onPress={() => {
-            /* Add contact us logic */
-          }}
-        />
+        <SettingItem title="Help Center" icon="help-circle-outline" onPress={() => {/* Add help center logic */}} />
+        <SettingItem title="Contact Us" icon="mail-outline" onPress={() => {/* Add contact us logic */}} />
 
-        <View style={styles.logoutButtonContainer}>
-          <Button title="Log Out" onPress={handleLogout} color="#ff6347" />
-        </View>
-      </View>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <ThemedText style={styles.logoutText}>Log Out</ThemedText>
+        </TouchableOpacity>
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -95,7 +78,33 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
-  logoutButtonContainer: {
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  icon: {
+    marginRight: 15,
+  },
+  settingText: {
+    flex: 1,
+    fontSize: 16,
+  },
+  chevron: {
+    opacity: 0.5,
+  },
+  logoutButton: {
     marginTop: 30,
+    backgroundColor: '#ff6347',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

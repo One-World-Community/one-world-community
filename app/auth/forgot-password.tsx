@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Text } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import { router } from 'expo-router';
 
@@ -16,17 +16,35 @@ export default function ForgotPasswordScreen() {
     }
   }
 
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    resetPassword();
+  };
+
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        onChangeText={setEmail}
-        value={email}
-        placeholder="Email"
-        autoCapitalize="none"
-      />
-      <Button title="Reset Password" onPress={resetPassword} />
-      <Button title="Back to Sign In" onPress={() => router.back()} />
+      <Text style={styles.title}>Reset Password</Text>
+      <form onSubmit={handleSubmit}>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            onChangeText={setEmail}
+            value={email}
+            placeholder="Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            onSubmitEditing={handleSubmit}
+          />
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Reset Password</Text>
+        </TouchableOpacity>
+      </form>
+      <View style={styles.linkContainer}>
+        <TouchableOpacity onPress={() => router.push('/auth/sign-in')}>
+          <Text style={styles.link}>Back to Sign In</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -36,12 +54,46 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: 'white',
   },
   input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
+    flex: 1,
+    height: 50,
+    paddingHorizontal: 15,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  linkContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  link: {
+    color: '#007AFF',
+    fontSize: 14,
   },
 });

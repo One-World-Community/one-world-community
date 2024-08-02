@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, Button, Alert, Platform } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
 import { supabase } from "@/lib/supabase";
 import * as WebBrowser from "expo-web-browser";
 import { useAuthRequest, revokeAsync, ResponseType } from "expo-auth-session";
 import * as AuthSession from "expo-auth-session";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { Ionicons } from "@expo/vector-icons";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,11 +22,26 @@ export default function GitHubConnectCard() {
   const [isConnected, setIsConnected] = useState(false);
   const [response, setResponse] = useState(null);
 
+  const iconColor = useThemeColor({}, 'text');
+
+  useEffect(() => {
+    checkGitHubToken();
+  }, []);
+
+  const checkGitHubToken = async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      const githubToken = user?.user_metadata?.github_access_token;
+      setIsConnected(!!githubToken);
+    } catch (error) {
+      console.error("Error checking GitHub token:", error);
+    }
+  };
+
   const redirectUri = AuthSession.makeRedirectUri({
     useProxy: true,
   });
-
-  console.log("Using Redirect URI:", redirectUri);
 
   const [request, _, promptAsync] = useAuthRequest(
     {
@@ -38,17 +57,12 @@ export default function GitHubConnectCard() {
     },
   );
 
-  console.log("Auth request object:", JSON.stringify(request, null, 2));
-
   useEffect(() => {
-    console.log("Auth response:", JSON.stringify(response, null, 2));
     if (response?.type === "success") {
       const { code } = response.params;
-      console.log("Received authorization code:", code);
       exchangeCodeForToken(code);
     } else if (response?.type === "error") {
       console.error("Auth error:", response.error);
-      console.error("Full response:", JSON.stringify(response, null, 2));
     }
   }, [response]);
 
@@ -66,7 +80,6 @@ export default function GitHubConnectCard() {
 
       const tokenData = await tokenResponse.json();
       if (tokenData.access_token) {
-        console.log("Received access token:", tokenData.access_token);
         handleGitHubToken(tokenData.access_token);
       } else {
         console.error("Error exchanging code for token:", tokenData);
@@ -93,19 +106,10 @@ export default function GitHubConnectCard() {
   const initiateGitHubOAuth = async () => {
     setIsConnecting(true);
     try {
-      console.log("Starting OAuth flow with options:", {
-        clientId: process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID,
-        redirectUri,
-        scopes: ["repo"],
-      });
-
       const result = await promptAsync();
-      console.log("OAuth result:", JSON.stringify(result, null, 2));
       if (result.type === "success") {
         setResponse(result);
-        console.log("OAuth flow successful");
       } else {
-        console.log("OAuth flow unsuccessful. Full result:", JSON.stringify(result, null, 2));
         throw new Error(`GitHub OAuth flow was not successful. Type: ${result.type}`);
       }
     } catch (error) {
@@ -152,13 +156,67 @@ export default function GitHubConnectCard() {
   };
 
   return (
-    <View>
-      <Button
-        title={isConnecting ? "Connecting..." : "Connect GitHub"}
-        onPress={initiateGitHubOAuth}
-        disabled={isConnecting || !request}
-      />
-      <Button title="Revoke Authentication" onPress={revokeAuthentication} disabled={isConnecting} />
-    </View>
+    <ThemedView style={styles.card}>
+      <View style={styles.iconContainer}>
+        <Ionicons name="logo-github" size={24} color={iconColor} />
+      </View>
+      <View style={styles.contentContainer}>
+        <ThemedText style={styles.title}>GitHub Integration</ThemedText>
+        <ThemedText style={styles.description}>
+          {isConnected
+            ? "Your GitHub account is connected. You can now use GitHub features in the app."
+            : "Connect your GitHub account to enable GitHub-related features."}
+        </ThemedText>
+      </View>
+      <TouchableOpacity
+        style={[styles.button, isConnected ? styles.revokeButton : styles.connectButton]}
+        onPress={isConnected ? revokeAuthentication : initiateGitHubOAuth}
+        disabled={isConnecting}
+      >
+        <ThemedText style={styles.buttonText}>
+          {isConnecting ? "Connecting..." : isConnected ? "Revoke" : "Connect"}
+        </ThemedText>
+      </TouchableOpacity>
+    </ThemedView>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  iconContainer: {
+    marginRight: 16,
+  },
+  contentContainer: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  description: {
+    fontSize: 14,
+    color: "#666",
+  },
+  button: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  connectButton: {
+    backgroundColor: "#007AFF",
+  },
+  revokeButton: {
+    backgroundColor: "#FF3B30",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+});
