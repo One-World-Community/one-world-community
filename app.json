@@ -31,7 +31,8 @@
     },
     "plugins": ["expo-router"],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/one-world-community"
     },
     "extra": {
       "router": {
