@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Text, GestureResponderEvent } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Text } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,48 +56,41 @@ export default function SignInScreen() {
     router.replace('/'); // Redirect to the main app screen
   }
 
-  const handleSubmit = () => {
-    signInWithEmail();
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
-      <form onSubmit={handleSubmit}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            onChangeText={setEmail}
-            value={email}
-            placeholder="Email"
-            autoCapitalize="none"
-            keyboardType="email-address"
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          onChangeText={setEmail}
+          value={email}
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          onChangeText={setPassword}
+          value={password}
+          placeholder="Password"
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity
+          style={styles.eyeIcon}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <Ionicons
+            name={showPassword ? 'eye-off' : 'eye'}
+            size={24}
+            color="gray"
           />
-        </View>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            onChangeText={setPassword}
-            value={password}
-            placeholder="Password"
-            secureTextEntry={!showPassword}
-            onSubmitEditing={() => handleSubmit()}
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off' : 'eye'}
-              size={24}
-              color="#007AFF"
-            />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
-      </form>
+      </View>
+      <TouchableOpacity style={styles.button} onPress={signInWithEmail}>
+        <Text style={styles.buttonText}>Sign In</Text>
+      </TouchableOpacity>
       <View style={styles.linkContainer}>
         <TouchableOpacity onPress={() => router.push('/auth/sign-up')}>
           <Text style={styles.link}>Create Account</Text>

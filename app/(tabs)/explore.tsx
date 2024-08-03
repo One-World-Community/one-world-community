@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, FlatList, TextInput, View, Platform, useWindowDimensions, ImageComponent } from "react-native";
+import { StyleSheet, FlatList, TextInput, View, Platform, useWindowDimensions, ImageComponent, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -105,12 +105,9 @@ export default function ExploreScreen() {
 
       {renderCategories()}
 
-      <FlatList
-        data={articles}
-        renderItem={({ item }) => <ArticleCard article={item} isWeb={isWeb} isSmallScreen={isSmallScreen} />}
-        keyExtractor={(item) => item.id}
-        style={styles.articleList}
-      />
+      {articles.map((item) => (
+        <ArticleCard key={item.id} article={item} isWeb={isWeb} isSmallScreen={isSmallScreen} />
+      ))}
     </>
   );
 
@@ -131,17 +128,19 @@ export default function ExploreScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {isWeb && !isSmallScreen ? (
-        <View style={styles.webContainer}>
-          <View style={styles.webMainContent}>{renderContent()}</View>
-          {renderSidebar()}
-        </View>
-      ) : (
-        <>
-          {renderContent()}
-          {renderSidebar()}
-        </>
-      )}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {isWeb && !isSmallScreen ? (
+          <View style={styles.webContainer}>
+            <View style={styles.webMainContent}>{renderContent()}</View>
+            {renderSidebar()}
+          </View>
+        ) : (
+          <>
+            {renderContent()}
+            {renderSidebar()}
+          </>
+        )}
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -149,7 +148,9 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   webContainer: {
     flexDirection: "row",
@@ -172,6 +173,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 8,
     marginBottom: 16,
+    marginHorizontal: 16,
   },
   searchIcon: {
     marginRight: 8,
@@ -184,9 +186,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     marginBottom: 16,
-  },
-  articleList: {
-    flex: 1,
+    paddingHorizontal: 16,
   },
   sidebarTitle: {
     fontSize: 20,

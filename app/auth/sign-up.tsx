@@ -52,49 +52,41 @@ export default function SignUpScreen() {
     }
   }
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    signUpWithEmail();
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Account</Text>
-      <form onSubmit={handleSubmit}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            onChangeText={setEmail}
-            value={email}
-            placeholder="Email"
-            autoCapitalize="none"
-            keyboardType="email-address"
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          onChangeText={setEmail}
+          value={email}
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          onChangeText={setPassword}
+          value={password}
+          placeholder="Password"
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity
+          style={styles.eyeIcon}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <Ionicons
+            name={showPassword ? 'eye-off' : 'eye'}
+            size={24}
+            color="#007AFF"
           />
-        </View>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            onChangeText={setPassword}
-            value={password}
-            placeholder="Password"
-            secureTextEntry={!showPassword}
-            onSubmitEditing={(e) => handleSubmit()}
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off' : 'eye'}
-              size={24}
-              color="#007AFF"
-            />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity style={styles.button} onPress={(event) => handleSubmit()}>
-          <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
-      </form>
+      </View>
+      <TouchableOpacity style={styles.button} onPress={signUpWithEmail}>
+        <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
       <View style={styles.linkContainer}>
         <TouchableOpacity onPress={() => router.push('/auth/sign-in')}>
           <Text style={styles.link}>Already have an account? Sign In</Text>

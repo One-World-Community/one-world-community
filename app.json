@@ -21,7 +21,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.oneworldcommunity.oneworldcommunity"
     },
     "web": {
       "bundler": "metro",
@@ -29,7 +30,9 @@
       "favicon": "./assets/images/favicon.png",
       "redirectUri": "https://auth.expo.io/@one-world-community/one-world-community"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true,
       "baseUrl": "/one-world-community"

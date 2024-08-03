@@ -16,30 +16,22 @@ export default function ForgotPasswordScreen() {
     }
   }
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    resetPassword();
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Reset Password</Text>
-      <form onSubmit={handleSubmit}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            onChangeText={setEmail}
-            value={email}
-            placeholder="Email"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            onSubmitEditing={(e) => handleSubmit()}
-          />
-        </View>
-        <TouchableOpacity style={styles.button} onPress={(e) => handleSubmit()}>
-          <Text style={styles.buttonText}>Reset Password</Text>
-        </TouchableOpacity>
-      </form>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          onChangeText={setEmail}
+          value={email}
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+      </View>
+      <TouchableOpacity style={styles.button} onPress={resetPassword}>
+        <Text style={styles.buttonText}>Reset Password</Text>
+      </TouchableOpacity>
       <View style={styles.linkContainer}>
         <TouchableOpacity onPress={() => router.push('/auth/sign-in')}>
           <Text style={styles.link}>Back to Sign In</Text>
