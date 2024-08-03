@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 
-const TopicChip = ({ topic }) => (
+const TopicChip = ({ topic }: { topic: string }) => (
   <TouchableOpacity style={styles.chip}>
     <ThemedText style={styles.chipText}>{topic}</ThemedText>
   </TouchableOpacity>

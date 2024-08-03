@@ -67,7 +67,7 @@ async function getGitHubPagesInfo(owner: string, repo: string) {
   try {
     return await githubRequest(`/repos/${owner}/${repo}/pages`);
   } catch (error) {
-    if (error.message.includes("404")) {
+    if (error instanceof Error && error.message.includes("404")) {
       return null; // Pages not configured yet
     }
     throw error;
@@ -86,9 +86,9 @@ export async function enableGitHubPages(owner: string, repo: string, maxRetries 
         });
         console.log("GitHub Pages enabled successfully:", response);
         return response;
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error enabling GitHub Pages:", error);
-        if (error.message.includes("409")) {
+        if (error instanceof Error && error.message.includes("409")) {
           console.log("GitHub Pages already exists. Attempting to update...");
           try {
             const updateResponse = await githubRequest(`/repos/${owner}/${repo}/pages`, "PUT", {

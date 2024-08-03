@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { Alert, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -7,6 +7,14 @@ import { supabase } from "@/lib/supabase";
 import GitHubConnectCard from "@/components/GitHubConnectCard";
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from "@/hooks/useThemeColor";
+
+type IconName = React.ComponentProps<typeof Ionicons>['name'];
+
+interface SettingItemProps {
+  title: string;
+  icon: IconName;
+  onPress: () => void;
+}
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -17,11 +25,15 @@ export default function SettingsScreen() {
       if (error) throw error;
       router.replace("/auth/sign-in");
     } catch (error) {
-      Alert.alert("Error", error.message);
+      if (error instanceof Error) {
+        Alert.alert("Error", error.message);
+      } else {
+        Alert.alert("Error", "An unknown error occurred");
+      }
     }
   };
 
-  const SettingItem = ({ title, icon, onPress }) => {
+  const SettingItem: React.FC<SettingItemProps> = ({ title, icon, onPress }) => {
     const iconColor = useThemeColor({}, 'text');
     return (
       <TouchableOpacity style={styles.settingItem} onPress={onPress}>
@@ -45,7 +57,7 @@ export default function SettingsScreen() {
         <SettingItem title="Privacy Settings" icon="shield-outline" onPress={() => {/* Add privacy settings logic */}} />
 
         <ThemedText style={styles.sectionTitle}>Integrations</ThemedText>
-        <GitHubConnectCard />
+        <GitHubConnectCard onConnectComplete={() => {}} />
 
         <ThemedText style={styles.sectionTitle}>Support</ThemedText>
         <SettingItem title="Help Center" icon="help-circle-outline" onPress={() => {/* Add help center logic */}} />

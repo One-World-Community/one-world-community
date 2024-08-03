@@ -66,13 +66,13 @@ const recommendedTopics = [
 
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { width } = useWindowDimensions();
 
   const isWeb = Platform.OS === "web";
   const isSmallScreen = width < 768;
 
-  const toggleCategory = (category) => {
+  const toggleCategory = (category: string) => {
     setSelectedCategories((prevSelected) =>
       prevSelected.includes(category) ? prevSelected.filter((c) => c !== category) : [...prevSelected, category],
     );

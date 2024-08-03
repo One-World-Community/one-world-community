@@ -3,7 +3,7 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 
-const CategoryChip = ({ category, isSelected, onToggle }) => (
+const CategoryChip = ({ category, isSelected, onToggle }: { category: string; isSelected: boolean; onToggle: () => void }) => (
   <TouchableOpacity onPress={onToggle} style={styles.touchable}>
     <ThemedView style={[styles.chip, isSelected && styles.selectedChip]}>
       <ThemedText style={[styles.chipText, isSelected && styles.selectedChipText]}>{category}</ThemedText>

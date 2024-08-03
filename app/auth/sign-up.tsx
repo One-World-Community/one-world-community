@@ -78,7 +78,7 @@ export default function SignUpScreen() {
             value={password}
             placeholder="Password"
             secureTextEntry={!showPassword}
-            onSubmitEditing={handleSubmit}
+            onSubmitEditing={(e) => handleSubmit()}
           />
           <TouchableOpacity
             style={styles.eyeIcon}
@@ -91,7 +91,7 @@ export default function SignUpScreen() {
             />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <TouchableOpacity style={styles.button} onPress={(event) => handleSubmit()}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </form>

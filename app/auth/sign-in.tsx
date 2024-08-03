@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Text, GestureResponderEvent } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,8 +56,7 @@ export default function SignInScreen() {
     router.replace('/'); // Redirect to the main app screen
   }
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSubmit = () => {
     signInWithEmail();
   };
 
@@ -82,7 +81,7 @@ export default function SignInScreen() {
             value={password}
             placeholder="Password"
             secureTextEntry={!showPassword}
-            onSubmitEditing={handleSubmit}
+            onSubmitEditing={() => handleSubmit()}
           />
           <TouchableOpacity
             style={styles.eyeIcon}

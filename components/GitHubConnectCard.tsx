@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
 import { supabase } from "@/lib/supabase";
 import * as WebBrowser from "expo-web-browser";
-import { useAuthRequest, revokeAsync, ResponseType } from "expo-auth-session";
+import { useAuthRequest, revokeAsync, ResponseType, AuthSessionResult } from "expo-auth-session";
 import * as AuthSession from "expo-auth-session";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -17,10 +17,14 @@ const discovery = {
   revocationEndpoint: `https://github.com/settings/connections/applications/${process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID}`,
 };
 
-export default function GitHubConnectCard() {
+export interface GitHubConnectCardProps {
+  onConnectComplete: () => void;
+}
+
+const GitHubConnectCard: React.FC<GitHubConnectCardProps> = ({ onConnectComplete }) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [response, setResponse] = useState(null);
+  const [response, setResponse] = useState<AuthSessionResult | null>(null);
 
   const iconColor = useThemeColor({}, 'text');
 
@@ -40,21 +44,17 @@ export default function GitHubConnectCard() {
   };
 
   const redirectUri = AuthSession.makeRedirectUri({
-    useProxy: true,
+    scheme: 'oneworldcommunity'
   });
 
   const [request, _, promptAsync] = useAuthRequest(
     {
-      clientId: process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID,
+      clientId: process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID || 'Ov23liLmQRk3xXi9PeKz',
       scopes: ["repo"],
       redirectUri,
       responseType: ResponseType.Code,
     },
-    discovery,
-    {
-      useProxy: true,
-      projectNameForProxy: "@one-world-community/one-world-community",
-    },
+    discovery
   );
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function GitHubConnectCard() {
     }
   }, [response]);
 
-  const exchangeCodeForToken = async (code) => {
+  const exchangeCodeForToken = async (code: string) => {
     try {
       const tokenResponse = await fetch(
         `https://zmvmrezwgkiksstvmlkq.supabase.co/functions/v1/github-oauth?code=${encodeURIComponent(code)}`,
@@ -89,7 +89,7 @@ export default function GitHubConnectCard() {
     }
   };
 
-  const handleGitHubToken = async (access_token) => {
+  const handleGitHubToken = async (access_token: string) => {
     try {
       const { error: updateError } = await supabase.auth.updateUser({
         data: { github_access_token: access_token },
@@ -97,6 +97,7 @@ export default function GitHubConnectCard() {
       if (updateError) throw updateError;
       setIsConnected(true);
       Alert.alert("Success", "GitHub account connected successfully!");
+      onConnectComplete();
     } catch (error) {
       console.error("Error in handleGitHubToken:", error);
       Alert.alert("Error", "Failed to connect GitHub account. Please try again.");
@@ -129,7 +130,7 @@ export default function GitHubConnectCard() {
       });
       if (error) throw error;
 
-      if (response?.params?.access_token) {
+      if (response?.type === "success" && response.params?.access_token) {
         await revokeAsync(
           {
             token: response.params.access_token,
@@ -220,3 +221,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
+export default GitHubConnectCard;

@@ -18,8 +18,22 @@ import {
   updateUserMetadata,
 } from "@/lib/github-api";
 
+// Define interfaces for the CustomAlert props and button type
+interface CustomAlertProps {
+  visible: boolean;
+  title: string;
+  message: string;
+  buttons: Array<{ text: string; onPress: () => void }>;
+  onDismiss: () => void;
+}
+
+interface Template {
+  name: string;
+  value: string;
+}
+
 // Custom alert component that works on both web and mobile
-const CustomAlert = ({ visible, title, message, buttons, onDismiss }) => {
+const CustomAlert: React.FC<CustomAlertProps> = ({ visible, title, message, buttons, onDismiss }) => {
   useEffect(() => {
     if (Platform.OS === "web" && visible) {
       const result = window.confirm(`${title}\n\n${message}`);
@@ -65,12 +79,18 @@ interface GithubSetupBlogProps {
 
 const GithubSetupBlog: React.FC<GithubSetupBlogProps> = ({ onSetupComplete }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [templates, setTemplates] = useState([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [blogName, setBlogName] = useState("");
   const [blogDescription, setBlogDescription] = useState("");
   const [status, setStatus] = useState("");
-  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", buttons: [] });
+  const [alertConfig, setAlertConfig] = useState<CustomAlertProps>({
+    visible: false,
+    title: "",
+    message: "",
+    buttons: [],
+    onDismiss: () => {},
+  });
   const [hasGitHubToken, setHasGitHubToken] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -107,23 +127,32 @@ const GithubSetupBlog: React.FC<GithubSetupBlogProps> = ({ onSetupComplete }) =>
       }
     } catch (error) {
       console.error("Error loading templates:", error);
-      showAlert("Error", "Failed to load blog templates. Please try again later.", [{ text: "OK" }]);
+      showAlert("Error", "Failed to load blog templates. Please try again later.", [
+        { text: "OK", onPress: () => {} },
+      ]);
     }
   };
 
   // Custom alert function
-  const showAlert = useCallback((title, message, buttons) => {
-    setAlertConfig({ visible: true, title, message, buttons });
-  }, []);
+  const showAlert = useCallback(
+    (title: string, message: string, buttons: Array<{ text: string; onPress: () => void }>) => {
+      setAlertConfig({ visible: true, title, message, buttons, onDismiss: () => {} });
+    },
+    []
+  );
 
   const setupBlog = async () => {
     if (!blogName.trim()) {
-      showAlert("Error", "Please enter a name for your blog.", [{ text: "OK" }]);
+      showAlert("Error", "Please enter a name for your blog.", [
+        { text: "OK", onPress: () => {} },
+      ]);
       return;
     }
 
     if (!selectedTemplate) {
-      showAlert("Error", "Please select a template for your blog.", [{ text: "OK" }]);
+      showAlert("Error", "Please select a template for your blog.", [
+        { text: "OK", onPress: () => {} },
+      ]);
       return;
     }
 
@@ -204,7 +233,7 @@ const GithubSetupBlog: React.FC<GithubSetupBlogProps> = ({ onSetupComplete }) =>
                 text: "Copy Expected URL",
                 onPress: () => Clipboard.setStringAsync(expectedUrl),
               },
-              { text: "OK" },
+              { text: "OK", onPress: () => {} },
             ],
           );
         }
@@ -245,10 +274,12 @@ const GithubSetupBlog: React.FC<GithubSetupBlogProps> = ({ onSetupComplete }) =>
           ],
         );
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error setting up blog:", error);
       setStatus("Error occurred during setup.");
-      showAlert("Error", `Failed to set up blog: ${error.message}`, [{ text: "OK" }]);
+      showAlert("Error", `Failed to set up blog: ${error instanceof Error ? error.message : "Unknown error"}`, [
+        { text: "OK", onPress: () => {} },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -280,7 +311,7 @@ const GithubSetupBlog: React.FC<GithubSetupBlogProps> = ({ onSetupComplete }) =>
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={selectedTemplate}
-            onValueChange={(itemValue) => setSelectedTemplate(itemValue)}
+            onValueChange={(itemValue: string) => setSelectedTemplate(itemValue)}
             style={styles.picker}
           >
             {templates.map((template, index) => (

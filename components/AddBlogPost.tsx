@@ -53,9 +53,10 @@ ${content}`;
       setContent("");
       Alert.alert("Success", "Your post has been added successfully!");
       onPostAdded();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error adding post:", error);
-      Alert.alert("Error", `Failed to add post: ${error.message}. Please try again.`);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      Alert.alert("Error", `Failed to add post: ${errorMessage}. Please try again.`);
     } finally {
       setIsLoading(false);
     }

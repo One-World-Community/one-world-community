@@ -33,10 +33,10 @@ export default function ForgotPasswordScreen() {
             placeholder="Email"
             autoCapitalize="none"
             keyboardType="email-address"
-            onSubmitEditing={handleSubmit}
+            onSubmitEditing={(e) => handleSubmit()}
           />
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <TouchableOpacity style={styles.button} onPress={(e) => handleSubmit()}>
           <Text style={styles.buttonText}>Reset Password</Text>
         </TouchableOpacity>
       </form>
