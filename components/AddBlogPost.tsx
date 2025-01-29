@@ -15,14 +15,20 @@ const AddBlogPost: React.FC<AddBlogPostProps> = ({ onPostAdded }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddPost = async () => {
-    if (!title.trim() || !content.trim()) {
-      Alert.alert("Error", "Please enter both title and content for your post.");
-      return;
-    }
-
-    setIsLoading(true);
-
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.provider_token) {
+        Alert.alert("Error", "Please reconnect your GitHub account");
+        return;
+      }
+
+      if (!title.trim() || !content.trim()) {
+        Alert.alert("Error", "Please enter both title and content for your post.");
+        return;
+      }
+
+      setIsLoading(true);
+
       const {
         data: { user },
         error: userError,
@@ -53,10 +59,9 @@ ${content}`;
       setContent("");
       Alert.alert("Success", "Your post has been added successfully!");
       onPostAdded();
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error adding post:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      Alert.alert("Error", `Failed to add post: ${errorMessage}. Please try again.`);
+      Alert.alert("Error", `Failed to add post: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsLoading(false);
     }

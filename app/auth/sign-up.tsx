@@ -10,45 +10,97 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   async function signUpWithEmail() {
-    const { data, error } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    });
+    try {
+      // Basic validation
+      if (!email || !password) {
+        Alert.alert('Error', 'Email and password are required');
+        return;
+      }
 
-    if (error) {
-      Alert.alert('Error', error.message);
-      return;
-    }
+      // Password strength validation
+      if (password.length < 6) {
+        Alert.alert('Error', 'Password must be at least 6 characters long');
+        return;
+      }
 
-    if (!data.user) {
-      Alert.alert('Error', 'User creation failed. Please try again.');
-      return;
-    }
+      // Try to sign up the user
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+      });
 
-    // Add user to public users table
-    const { error: insertError } = await supabase
-      .from('users')
-      .insert({ id: data.user.id, email: data.user.email });
+      if (error) {
+        // Handle the case where the email is already registered
+        if (error.message.includes('already registered')) {
+          // Try to sign in with password to check if it's an OAuth-only user
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+          });
 
-    if (insertError) {
-      console.error('Error inserting user into public table:', insertError);
-      Alert.alert('Error', 'Failed to create user profile. Please try again.');
-      return;
-    }
+          if (signInError && signInError.message.includes('Invalid login credentials')) {
+            Alert.alert(
+              'OAuth Account Exists',
+              'This email is registered with a social login. Please sign in using your social account first, then you can add a password.',
+              [
+                {
+                  text: 'Go to Sign In',
+                  onPress: () => router.replace('/auth/sign-in'),
+                },
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+              ]
+            );
+            return;
+          }
 
-    // Sign in the user
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
+          // If the error is not about invalid credentials, it's a regular registered user
+          Alert.alert(
+            'Account Exists',
+            'This email is already registered. Please sign in with your password.',
+            [
+              {
+                text: 'Go to Sign In',
+                onPress: () => router.replace('/auth/sign-in'),
+              },
+              {
+                text: 'Cancel',
+                style: 'cancel',
+              },
+            ]
+          );
+          return;
+        }
+        throw error;
+      }
 
-    if (signInError) {
-      console.error('Error signing in after account creation:', signInError);
-      Alert.alert('Account created', 'Your account was created successfully, but we couldn\'t sign you in automatically. Please sign in manually.');
-      router.replace('/auth/sign-in');
-    } else {
+      if (!data.user) {
+        Alert.alert('Error', 'User creation failed. Please try again.');
+        return;
+      }
+
+      // Add user to public users table
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({ id: data.user.id, email: data.user.email });
+
+      if (insertError) {
+        console.error('Error inserting user into public table:', insertError);
+        Alert.alert('Error', 'Failed to create user profile. Please try again.');
+        return;
+      }
+
       Alert.alert('Success', 'Your account has been created and you\'re now signed in!');
-      router.replace('/'); // Redirect to the main app screen
+      router.replace('/');
+
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert('Error', error.message);
+      } else {
+        Alert.alert('Error', 'An unexpected error occurred');
+      }
     }
   }
 

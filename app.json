@@ -27,8 +27,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
-      "redirectUri": "https://auth.expo.io/@one-world-community/one-world-community"
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router"

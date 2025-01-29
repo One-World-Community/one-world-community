@@ -1,158 +1,80 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { supabase } from "@/lib/supabase";
-import * as WebBrowser from "expo-web-browser";
-import { useAuthRequest, revokeAsync, ResponseType, AuthSessionResult } from "expo-auth-session";
-import * as AuthSession from "expo-auth-session";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
-
-WebBrowser.maybeCompleteAuthSession();
-
-const discovery = {
-  authorizationEndpoint: "https://github.com/login/oauth/authorize",
-  tokenEndpoint: "https://github.com/login/oauth/access_token",
-  revocationEndpoint: `https://github.com/settings/connections/applications/${process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID}`,
-};
 
 export interface GitHubConnectCardProps {
   onConnectComplete: () => void;
 }
 
 const GitHubConnectCard: React.FC<GitHubConnectCardProps> = ({ onConnectComplete }) => {
-  const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [response, setResponse] = useState<AuthSessionResult | null>(null);
-
   const iconColor = useThemeColor({}, 'text');
 
   useEffect(() => {
-    checkGitHubToken();
+    checkGitHubConnection();
   }, []);
 
-  const checkGitHubToken = async () => {
+  const checkGitHubConnection = async () => {
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) throw error;
-      const githubToken = user?.user_metadata?.github_access_token;
-      setIsConnected(!!githubToken);
+      
+      // Check for GitHub token in identities or provider_token
+      const hasGitHub = user?.identities?.some(identity => identity.provider === 'github') 
+        || !!user?.app_metadata?.provider_token 
+        || user?.app_metadata?.provider === 'github';
+        
+      setIsConnected(hasGitHub);
     } catch (error) {
-      console.error("Error checking GitHub token:", error);
+      console.error("Error checking GitHub connection:", error);
     }
   };
 
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: 'oneworldcommunity'
-  });
-
-  const [request, _, promptAsync] = useAuthRequest(
-    {
-      clientId: process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID || 'Ov23liLmQRk3xXi9PeKz',
-      scopes: ["repo"],
-      redirectUri,
-      responseType: ResponseType.Code,
-    },
-    discovery
-  );
-
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { code } = response.params;
-      exchangeCodeForToken(code);
-    } else if (response?.type === "error") {
-      console.error("Auth error:", response.error);
-    }
-  }, [response]);
-
-  const exchangeCodeForToken = async (code: string) => {
+  const handleConnect = async () => {
     try {
-      const tokenResponse = await fetch(
-        `https://zmvmrezwgkiksstvmlkq.supabase.co/functions/v1/github-oauth?code=${encodeURIComponent(code)}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      const tokenData = await tokenResponse.json();
-      if (tokenData.access_token) {
-        handleGitHubToken(tokenData.access_token);
-      } else {
-        console.error("Error exchanging code for token:", tokenData);
-      }
-    } catch (error) {
-      console.error("Error exchanging code for token:", error);
-    }
-  };
-
-  const handleGitHubToken = async (access_token: string) => {
-    try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { github_access_token: access_token },
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          scopes: 'repo',
+          redirectTo: Platform.select({
+            web: process.env.NODE_ENV === 'development' 
+              ? 'http://localhost:3000/auth/callback'
+              : `${window.location.origin}`,
+            default: 'oneworldcommunity://auth/callback'
+          }),
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
       });
-      if (updateError) throw updateError;
-      setIsConnected(true);
-      Alert.alert("Success", "GitHub account connected successfully!");
+      
+      if (error) throw error;
+      
+      // Wait for the session to be established
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.provider_token) {
+        throw new Error("Failed to get GitHub token");
+      }
+      
+      await checkGitHubConnection();
       onConnectComplete();
     } catch (error) {
-      console.error("Error in handleGitHubToken:", error);
-      Alert.alert("Error", "Failed to connect GitHub account. Please try again.");
+      console.error("Error connecting to GitHub:", error);
     }
   };
 
-  const initiateGitHubOAuth = async () => {
-    setIsConnecting(true);
+  const handleDisconnect = async () => {
     try {
-      const result = await promptAsync();
-      if (result.type === "success") {
-        setResponse(result);
-      } else {
-        throw new Error(`GitHub OAuth flow was not successful. Type: ${result.type}`);
-      }
-    } catch (error) {
-      console.error("Detailed error in initiateGitHubOAuth:", error);
-      Alert.alert("Error", "Failed to connect GitHub account. Please try again.");
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const revokeAuthentication = async () => {
-    try {
-      await WebBrowser.dismissBrowser();
-
-      const { error } = await supabase.auth.updateUser({
-        data: { github_access_token: null },
-      });
+      const { error } = await supabase.auth.signOut();
       if (error) throw error;
-
-      if (response?.type === "success" && response.params?.access_token) {
-        await revokeAsync(
-          {
-            token: response.params.access_token,
-            clientId: process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID,
-          },
-          discovery,
-        );
-      }
-
-      AuthSession.dismiss();
-
-      if (Platform.OS === "ios") {
-        await WebBrowser.coolDownAsync();
-      }
-
       setIsConnected(false);
-      setResponse(null);
-
-      Alert.alert("Success", "GitHub authentication revoked and session reset!");
     } catch (error) {
-      console.error("Error in revokeAuthentication:", error);
-      Alert.alert("Error", "Failed to revoke authentication. Please try again.");
+      console.error("Error disconnecting from GitHub:", error);
     }
   };
 
@@ -171,16 +93,15 @@ const GitHubConnectCard: React.FC<GitHubConnectCardProps> = ({ onConnectComplete
       </View>
       <TouchableOpacity
         style={[styles.button, isConnected ? styles.revokeButton : styles.connectButton]}
-        onPress={isConnected ? revokeAuthentication : initiateGitHubOAuth}
-        disabled={isConnecting}
+        onPress={isConnected ? handleDisconnect : handleConnect}
       >
         <ThemedText style={styles.buttonText}>
-          {isConnecting ? "Connecting..." : isConnected ? "Revoke" : "Connect"}
+          {isConnected ? "Disconnect" : "Connect"}
         </ThemedText>
       </TouchableOpacity>
     </ThemedView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {

@@ -3,13 +3,14 @@ import { supabase } from "./supabase";
 const BASE_URL = "https://api.github.com";
 
 async function getAuthToken(): Promise<string> {
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
-  const githubToken = userData.user?.user_metadata.github_access_token;
-  if (!githubToken) {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  
+  if (!session?.provider_token) {
     throw new Error("GitHub token not found");
   }
-  return githubToken;
+  
+  return session.provider_token;
 }
 
 async function githubRequest(endpoint: string, method: string = "GET", body?: any) {

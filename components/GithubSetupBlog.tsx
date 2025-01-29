@@ -100,14 +100,17 @@ const GithubSetupBlog: React.FC<GithubSetupBlogProps> = ({ onSetupComplete }) =>
 
   const checkGitHubToken = async () => {
     try {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+      const { data: { session }, error } = await supabase.auth.getSession();
       if (error) throw error;
 
-      const githubToken = user?.user_metadata?.github_access_token;
-      setHasGitHubToken(!!githubToken);
+      // Check for GitHub token in session's provider_token
+      setHasGitHubToken(!!session?.provider_token);
+      
+      // Debug log
+      console.log('GitHub token check:', {
+        hasToken: !!session?.provider_token,
+        session: session
+      });
     } catch (error) {
       console.error("Error checking GitHub token:", error);
       setHasGitHubToken(false);
