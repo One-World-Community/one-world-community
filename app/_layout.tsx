@@ -35,7 +35,7 @@ function RootLayoutNav() {
       // Redirect away from the sign-in page.
       router.replace("/");
     }
-  }, [session, segments, router]);
+  }, [session, segments]);
 
   return <Slot />;
 }

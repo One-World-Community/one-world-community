@@ -1,6 +1,0 @@
-{
-  "ignorePatterns": [
-    "supabase/**/*",
-    "node_modules/**/*"
-  ]
-} 

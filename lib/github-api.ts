@@ -58,8 +58,19 @@ async function checkRepoReady(owner: string, repo: string): Promise<boolean> {
   try {
     await githubRequest(`/repos/${owner}/${repo}/branches`);
     return true;
-  } catch {
+  } catch (error) {
     return false;
+  }
+}
+
+async function getGitHubPagesInfo(owner: string, repo: string) {
+  try {
+    return await githubRequest(`/repos/${owner}/${repo}/pages`);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("404")) {
+      return null; // Pages not configured yet
+    }
+    throw error;
   }
 }
 
@@ -75,9 +86,9 @@ export async function enableGitHubPages(owner: string, repo: string, maxRetries 
         });
         console.log("GitHub Pages enabled successfully:", response);
         return response;
-      } catch (err: unknown) {
-        console.error("Error enabling GitHub Pages:", err);
-        if (err instanceof Error && err.message.includes("409")) {
+      } catch (error: unknown) {
+        console.error("Error enabling GitHub Pages:", error);
+        if (error instanceof Error && error.message.includes("409")) {
           console.log("GitHub Pages already exists. Attempting to update...");
           try {
             const updateResponse = await githubRequest(`/repos/${owner}/${repo}/pages`, "PUT", {
@@ -93,7 +104,7 @@ export async function enableGitHubPages(owner: string, repo: string, maxRetries 
             throw updateError;
           }
         }
-        throw err;
+        throw error;
       }
     }
     await new Promise((resolve) => setTimeout(resolve, delay));
@@ -142,8 +153,8 @@ export async function getPagesUrl(owner: string, repo: string): Promise<string |
   try {
     const response = await githubRequest(`/repos/${owner}/${repo}/pages`);
     return response.html_url || null;
-  } catch {
-    console.error("Error getting Pages URL");
+  } catch (error) {
+    console.error("Error getting Pages URL:", error);
     return null;
   }
 }
@@ -173,7 +184,7 @@ export async function commitFile(owner: string, repo: string, path: string, cont
     try {
       const currentFile = await githubRequest(`/repos/${owner}/${repo}/contents/${path}`);
       sha = currentFile.sha;
-    } catch {
+    } catch (error) {
       // If the file doesn't exist, we don't need the SHA
       console.log("File doesn't exist yet, creating new file");
     }
@@ -186,15 +197,19 @@ export async function commitFile(owner: string, repo: string, path: string, cont
     });
 
     return response;
-  } catch (err) {
-    console.error("Error committing file:", err);
-    throw err;
+  } catch (error) {
+    console.error("Error committing file:", error);
+    throw error;
   }
 }
+
 export async function updateUserMetadata(blogUrl: string) {
   try {
-    const { error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) throw error;
 
     const { data, error: updateError } = await supabase.auth.updateUser({
       data: { blog_url: blogUrl },
@@ -204,8 +219,8 @@ export async function updateUserMetadata(blogUrl: string) {
 
     console.log("User metadata updated successfully");
     return data;
-  } catch (err) {
-    console.error("Error updating user metadata:", err);
-    throw err;
+  } catch (error) {
+    console.error("Error updating user metadata:", error);
+    throw error;
   }
 }
