@@ -19,3 +19,28 @@ web-build/
 expo-env.d.ts
 # @end expo-cli
 .env
+
+# iOS
+ios/
+ios/Pods/
+ios/build/
+ios/*.xcodeproj
+ios/*.xcworkspace
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Android
+android/
+.gradle/
+local.properties
+*.iml
+android/app/build/
+android/build/
+android/gradle/
+android/local.properties
+android/.gradle/
+android/.idea/
+android/*.iml

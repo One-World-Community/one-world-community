@@ -7,6 +7,7 @@ import CategoryChip from "@/components/CategoryChip";
 import ArticleCard from "@/components/ArticleCard";
 import CommunityFavorite from "@/components/CommunityFavorite";
 import TopicChip from "@/components/TopicChip";
+import { TabScreenLayout } from '@/components/layouts/TabScreenLayout';
 
 // Placeholder data for categories and articles
 const categories = ["Technology", "Science", "Health", "Business", "Entertainment"];
@@ -127,21 +128,23 @@ export default function ExploreScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {isWeb && !isSmallScreen ? (
-          <View style={styles.webContainer}>
-            <View style={styles.webMainContent}>{renderContent()}</View>
-            {renderSidebar()}
-          </View>
-        ) : (
-          <>
-            {renderContent()}
-            {renderSidebar()}
-          </>
-        )}
-      </ScrollView>
-    </ThemedView>
+    <TabScreenLayout>
+      <ThemedView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {isWeb && !isSmallScreen ? (
+            <View style={styles.webContainer}>
+              <View style={styles.webMainContent}>{renderContent()}</View>
+              {renderSidebar()}
+            </View>
+          ) : (
+            <>
+              {renderContent()}
+              {renderSidebar()}
+            </>
+          )}
+        </ScrollView>
+      </ThemedView>
+    </TabScreenLayout>
   );
 }
 

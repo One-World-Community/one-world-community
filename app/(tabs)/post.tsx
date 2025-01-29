@@ -5,6 +5,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import GithubSetupBlog from "@/components/GithubSetupBlog";
 import AddBlogPost from "@/components/AddBlogPost";
+import { TabScreenLayout } from '@/components/layouts/TabScreenLayout';
 
 const PostsScreen = () => {
   const [blogUrl, setBlogUrl] = useState<string | null>(null);
@@ -47,28 +48,32 @@ const PostsScreen = () => {
 
   if (isLoading) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
-      </ThemedView>
+      <TabScreenLayout>
+        <ThemedView style={styles.container}>
+          <ThemedText style={styles.loadingText}>Loading...</ThemedText>
+        </ThemedView>
+      </TabScreenLayout>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {blogUrl ? (
-          <View style={styles.blogContent}>
-            <ThemedText style={styles.headerText}>Your blog is live at:</ThemedText>
-            <TouchableOpacity onPress={handleUrlPress}>
-              <ThemedText style={styles.blogUrl}>{blogUrl}</ThemedText>
-            </TouchableOpacity>
-            <AddBlogPost onPostAdded={handlePostAdded} />
-          </View>
-        ) : (
-          <GithubSetupBlog onSetupComplete={handleSetupComplete} />
-        )}
-      </ScrollView>
-    </ThemedView>
+    <TabScreenLayout>
+      <ThemedView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {blogUrl ? (
+            <View style={styles.blogContent}>
+              <ThemedText style={styles.headerText}>Your blog is live at:</ThemedText>
+              <TouchableOpacity onPress={handleUrlPress}>
+                <ThemedText style={styles.blogUrl}>{blogUrl}</ThemedText>
+              </TouchableOpacity>
+              <AddBlogPost onPostAdded={handlePostAdded} />
+            </View>
+          ) : (
+            <GithubSetupBlog onSetupComplete={handleSetupComplete} />
+          )}
+        </ScrollView>
+      </ThemedView>
+    </TabScreenLayout>
   );
 };
 

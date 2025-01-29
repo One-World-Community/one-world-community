@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import GitHubConnectCard from "@/components/GitHubConnectCard";
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { TabScreenLayout } from '@/components/layouts/TabScreenLayout';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -45,29 +46,31 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText style={styles.title}>Settings</ThemedText>
-      <ScrollView style={styles.settingsContainer}>
-        <ThemedText style={styles.sectionTitle}>Account</ThemedText>
-        <SettingItem title="Edit Profile" icon="person-outline" onPress={() => {/* Add edit profile logic */}} />
-        <SettingItem title="Change Password" icon="lock-closed-outline" onPress={() => {/* Add change password logic */}} />
+    <TabScreenLayout>
+      <ThemedView style={styles.container}>
+        <ThemedText style={styles.title}>Settings</ThemedText>
+        <ScrollView style={styles.settingsContainer}>
+          <ThemedText style={styles.sectionTitle}>Account</ThemedText>
+          <SettingItem title="Edit Profile" icon="person-outline" onPress={() => {/* Add edit profile logic */}} />
+          <SettingItem title="Change Password" icon="lock-closed-outline" onPress={() => {/* Add change password logic */}} />
 
-        <ThemedText style={styles.sectionTitle}>Preferences</ThemedText>
-        <SettingItem title="Notification Settings" icon="notifications-outline" onPress={() => {/* Add notification settings logic */}} />
-        <SettingItem title="Privacy Settings" icon="shield-outline" onPress={() => {/* Add privacy settings logic */}} />
+          <ThemedText style={styles.sectionTitle}>Preferences</ThemedText>
+          <SettingItem title="Notification Settings" icon="notifications-outline" onPress={() => {/* Add notification settings logic */}} />
+          <SettingItem title="Privacy Settings" icon="shield-outline" onPress={() => {/* Add privacy settings logic */}} />
 
-        <ThemedText style={styles.sectionTitle}>Integrations</ThemedText>
-        <GitHubConnectCard onConnectComplete={() => {}} />
+          <ThemedText style={styles.sectionTitle}>Integrations</ThemedText>
+          <GitHubConnectCard onConnectComplete={() => {}} />
 
-        <ThemedText style={styles.sectionTitle}>Support</ThemedText>
-        <SettingItem title="Help Center" icon="help-circle-outline" onPress={() => {/* Add help center logic */}} />
-        <SettingItem title="Contact Us" icon="mail-outline" onPress={() => {/* Add contact us logic */}} />
+          <ThemedText style={styles.sectionTitle}>Support</ThemedText>
+          <SettingItem title="Help Center" icon="help-circle-outline" onPress={() => {/* Add help center logic */}} />
+          <SettingItem title="Contact Us" icon="mail-outline" onPress={() => {/* Add contact us logic */}} />
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <ThemedText style={styles.logoutText}>Log Out</ThemedText>
-        </TouchableOpacity>
-      </ScrollView>
-    </ThemedView>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <ThemedText style={styles.logoutText}>Log Out</ThemedText>
+          </TouchableOpacity>
+        </ScrollView>
+      </ThemedView>
+    </TabScreenLayout>
   );
 }
 

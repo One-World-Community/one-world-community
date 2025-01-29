@@ -12,7 +12,7 @@ export default function AuthLayout() {
       style={styles.backgroundGradient}
     >
       <StatusBar style="dark" />
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.logoContainer}>
           <Text style={styles.logoText}>The One World Community</Text>
         </View>
@@ -36,7 +36,6 @@ export default function AuthLayout() {
 const styles = StyleSheet.create({
   backgroundGradient: {
     flex: 1,
-    width: "100%",
   },
   container: {
     flex: 1,

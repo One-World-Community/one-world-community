@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import EventCard from '@/components/EventCard';
+import { TabScreenLayout } from '@/components/layouts/TabScreenLayout';
 
 export default function HomeScreen() {
   const [events, setEvents] = useState([
@@ -22,26 +23,28 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.eventsContainer}>
-        <ThemedText type="subtitle">Upcoming Events</ThemedText>
-        <View style={styles.cardContainer}>
-          {events.length > 0 ? (
-            <EventCard
-              key={events[0].id}
-              title={events[0].title}
-              date={events[0].date}
-              location={events[0].location}
-              imageUrl={events[0].imageUrl}
-              onAccept={handleEventAction}
-              onReject={handleEventAction}
-            />
-          ) : (
-            <ThemedText>No events available</ThemedText>
-          )}
-        </View>
+    <TabScreenLayout>
+      <ThemedView style={styles.container}>
+        <ThemedView style={styles.eventsContainer}>
+          <ThemedText type="subtitle">Upcoming Events</ThemedText>
+          <View style={styles.cardContainer}>
+            {events.length > 0 ? (
+              <EventCard
+                key={events[0].id}
+                title={events[0].title}
+                date={events[0].date}
+                location={events[0].location}
+                imageUrl={events[0].imageUrl}
+                onAccept={handleEventAction}
+                onReject={handleEventAction}
+              />
+            ) : (
+              <ThemedText>No events available</ThemedText>
+            )}
+          </View>
+        </ThemedView>
       </ThemedView>
-    </ThemedView>
+    </TabScreenLayout>
   );
 }
 
