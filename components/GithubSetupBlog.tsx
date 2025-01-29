@@ -23,7 +23,7 @@ interface CustomAlertProps {
   visible: boolean;
   title: string;
   message: string;
-  buttons: Array<{ text: string; onPress: () => void }>;
+  buttons: { text: string; onPress: () => void }[];
   onDismiss: () => void;
 }
 
@@ -135,7 +135,7 @@ const GithubSetupBlog: React.FC<GithubSetupBlogProps> = ({ onSetupComplete }) =>
 
   // Custom alert function
   const showAlert = useCallback(
-    (title: string, message: string, buttons: Array<{ text: string; onPress: () => void }>) => {
+    (title: string, message: string, buttons: { text: string; onPress: () => void }[]) => {
       setAlertConfig({ visible: true, title, message, buttons, onDismiss: () => {} });
     },
     []

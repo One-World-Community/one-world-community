@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { View, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
 import { supabase } from "@/lib/supabase";
 import * as WebBrowser from "expo-web-browser";
@@ -47,7 +47,7 @@ const GitHubConnectCard: React.FC<GitHubConnectCardProps> = ({ onConnectComplete
     scheme: 'oneworldcommunity'
   });
 
-  const [request, _, promptAsync] = useAuthRequest(
+  const [, , promptAsync] = useAuthRequest(
     {
       clientId: process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID || 'Ov23liLmQRk3xXi9PeKz',
       scopes: ["repo"],
@@ -57,16 +57,22 @@ const GitHubConnectCard: React.FC<GitHubConnectCardProps> = ({ onConnectComplete
     discovery
   );
 
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { code } = response.params;
-      exchangeCodeForToken(code);
-    } else if (response?.type === "error") {
-      console.error("Auth error:", response.error);
+  const handleGitHubToken = useCallback(async (access_token: string) => {
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { github_access_token: access_token },
+      });
+      if (updateError) throw updateError;
+      setIsConnected(true);
+      Alert.alert("Success", "GitHub account connected successfully!");
+      onConnectComplete();
+    } catch (error) {
+      console.error("Error in handleGitHubToken:", error);
+      Alert.alert("Error", "Failed to connect GitHub account. Please try again.");
     }
-  }, [response]);
+  }, [onConnectComplete]);
 
-  const exchangeCodeForToken = async (code: string) => {
+  const exchangeCodeForToken = useCallback(async (code: string) => {
     try {
       const tokenResponse = await fetch(
         `https://zmvmrezwgkiksstvmlkq.supabase.co/functions/v1/github-oauth?code=${encodeURIComponent(code)}`,
@@ -80,29 +86,23 @@ const GitHubConnectCard: React.FC<GitHubConnectCardProps> = ({ onConnectComplete
 
       const tokenData = await tokenResponse.json();
       if (tokenData.access_token) {
-        handleGitHubToken(tokenData.access_token);
+        await handleGitHubToken(tokenData.access_token);
       } else {
         console.error("Error exchanging code for token:", tokenData);
       }
     } catch (error) {
       console.error("Error exchanging code for token:", error);
     }
-  };
+  }, [handleGitHubToken]);
 
-  const handleGitHubToken = async (access_token: string) => {
-    try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { github_access_token: access_token },
-      });
-      if (updateError) throw updateError;
-      setIsConnected(true);
-      Alert.alert("Success", "GitHub account connected successfully!");
-      onConnectComplete();
-    } catch (error) {
-      console.error("Error in handleGitHubToken:", error);
-      Alert.alert("Error", "Failed to connect GitHub account. Please try again.");
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { code } = response.params;
+      exchangeCodeForToken(code);
+    } else if (response?.type === "error") {
+      console.error("Auth error:", response.error);
     }
-  };
+  }, [response, exchangeCodeForToken]);
 
   const initiateGitHubOAuth = async () => {
     setIsConnecting(true);
