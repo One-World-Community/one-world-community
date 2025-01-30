@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, FlatList, TextInput, View, Platform, useWindowDimensions, ImageComponent, ScrollView } from "react-native";
+import { StyleSheet, TextInput, View, Platform, useWindowDimensions, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
