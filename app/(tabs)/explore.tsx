@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, TextInput, View, Platform, useWindowDimensions, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
@@ -8,6 +8,8 @@ import ArticleCard from "@/components/ArticleCard";
 import CommunityFavorite from "@/components/CommunityFavorite";
 import TopicChip from "@/components/TopicChip";
 import { TabScreenLayout } from '@/components/layouts/TabScreenLayout';
+import { supabase } from '@/lib/supabase';
+import TopicSelector from '@/components/TopicSelector';
 
 // Placeholder data for categories and articles
 const categories = ["Technology", "Science", "Health", "Business", "Entertainment"];
@@ -49,26 +51,18 @@ const articles = [
   // Add more placeholder articles as needed
 ];
 
-const communityFavorites = [
-  { id: "1", author: "M. H. Rubin", title: "A New Language for Photography" },
-  { id: "2", author: "Kevin Beaumont in DoublePulsar", title: "What I learned from the Microsoft global IT outage" },
-  { id: "3", author: "Arbor Brookes", title: "The First Date Nobody's Talking About" },
-];
-
-const recommendedTopics = [
-  "Self Improvement",
-  "Machine Learning",
-  "Writing",
-  "Relationships",
-  "Python",
-  "JavaScript",
-  "Software Development",
-];
+interface Topic {
+  id: number;
+  title: string;
+  description: string | null;
+}
 
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { width } = useWindowDimensions();
+  const [hasInterests, setHasInterests] = useState<boolean | null>(null);
+  const [recommendedTopics, setRecommendedTopics] = useState<Topic[]>([]);
 
   const isWeb = Platform.OS === "web";
   const isSmallScreen = width < 768;
@@ -114,36 +108,78 @@ export default function ExploreScreen() {
 
   const renderSidebar = () => (
     <ThemedView style={styles.sidebar}>
-      <ThemedText style={styles.sidebarTitle}>Community Favorites</ThemedText>
-      {communityFavorites.map((favorite) => (
-        <CommunityFavorite key={favorite.id} favorite={favorite} />
-      ))}
       <ThemedText style={[styles.sidebarTitle, styles.topicsTitle]}>Recommended topics</ThemedText>
       <View style={styles.topicsContainer}>
-        {recommendedTopics.map((topic, index) => (
-          <TopicChip key={index} topic={topic} />
+        {recommendedTopics.map((topic) => (
+          <TopicChip key={topic.id} topic={topic.title} />
         ))}
       </View>
     </ThemedView>
   );
 
+  useEffect(() => {
+    checkUserInterests();
+    fetchRecommendedTopics();
+  }, []);
+
+  const checkUserInterests = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('user_topics')
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) throw error;
+      setHasInterests((count ?? 0) > 0);
+    } catch (error) {
+      console.error('Error checking user interests:', error);
+    }
+  };
+
+  const fetchRecommendedTopics = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('topics')
+        .select('*')
+        .order('title')
+        .limit(7); // Limiting to 7 topics like the original hardcoded array
+      
+      if (error) throw error;
+      setRecommendedTopics(data || []);
+    } catch (error) {
+      console.error('Error fetching recommended topics:', error);
+    }
+  };
+
+  const handleTopicSelectComplete = () => {
+    setHasInterests(true);
+    // Additional logic after topics are selected
+  };
+
+  if (hasInterests === null) {
+    return null; // or loading state
+  }
+
   return (
     <TabScreenLayout>
-      <ThemedView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {isWeb && !isSmallScreen ? (
-            <View style={styles.webContainer}>
-              <View style={styles.webMainContent}>{renderContent()}</View>
-              {renderSidebar()}
-            </View>
-          ) : (
-            <>
-              {renderContent()}
-              {renderSidebar()}
-            </>
-          )}
-        </ScrollView>
-      </ThemedView>
+      {!hasInterests ? (
+        <TopicSelector onComplete={handleTopicSelectComplete} />
+      ) : (
+        <ThemedView style={styles.container}>
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            {isWeb && !isSmallScreen ? (
+              <View style={styles.webContainer}>
+                <View style={styles.webMainContent}>{renderContent()}</View>
+                {renderSidebar()}
+              </View>
+            ) : (
+              <>
+                {renderContent()}
+                {renderSidebar()}
+              </>
+            )}
+          </ScrollView>
+        </ThemedView>
+      )}
     </TabScreenLayout>
   );
 }
