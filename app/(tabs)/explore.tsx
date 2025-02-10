@@ -51,18 +51,11 @@ const articles = [
   // Add more placeholder articles as needed
 ];
 
-interface Topic {
-  id: number;
-  title: string;
-  description: string | null;
-}
-
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { width } = useWindowDimensions();
   const [hasInterests, setHasInterests] = useState<boolean | null>(null);
-  const [recommendedTopics, setRecommendedTopics] = useState<Topic[]>([]);
 
   const isWeb = Platform.OS === "web";
   const isSmallScreen = width < 768;
@@ -106,20 +99,8 @@ export default function ExploreScreen() {
     </>
   );
 
-  const renderSidebar = () => (
-    <ThemedView style={styles.sidebar}>
-      <ThemedText style={[styles.sidebarTitle, styles.topicsTitle]}>Recommended topics</ThemedText>
-      <View style={styles.topicsContainer}>
-        {recommendedTopics.map((topic) => (
-          <TopicChip key={topic.id} topic={topic.title} />
-        ))}
-      </View>
-    </ThemedView>
-  );
-
   useEffect(() => {
     checkUserInterests();
-    fetchRecommendedTopics();
   }, []);
 
   const checkUserInterests = async () => {
@@ -132,21 +113,6 @@ export default function ExploreScreen() {
       setHasInterests((count ?? 0) > 0);
     } catch (error) {
       console.error('Error checking user interests:', error);
-    }
-  };
-
-  const fetchRecommendedTopics = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('topics')
-        .select('*')
-        .order('title')
-        .limit(7); // Limiting to 7 topics like the original hardcoded array
-      
-      if (error) throw error;
-      setRecommendedTopics(data || []);
-    } catch (error) {
-      console.error('Error fetching recommended topics:', error);
     }
   };
 
@@ -169,13 +135,9 @@ export default function ExploreScreen() {
             {isWeb && !isSmallScreen ? (
               <View style={styles.webContainer}>
                 <View style={styles.webMainContent}>{renderContent()}</View>
-                {renderSidebar()}
               </View>
             ) : (
-              <>
-                {renderContent()}
-                {renderSidebar()}
-              </>
+              renderContent()
             )}
           </ScrollView>
         </ThemedView>
@@ -199,12 +161,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 20,
   },
-  sidebar: {
-    width: 300,
-    padding: 20,
-    borderLeftWidth: 1,
-    borderLeftColor: "#eee",
-  },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -226,17 +182,5 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginBottom: 16,
     paddingHorizontal: 16,
-  },
-  sidebarTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  topicsTitle: {
-    marginTop: 30,
-  },
-  topicsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
   },
 });
