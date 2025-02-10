@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, TextInput, View, Platform, useWindowDimensions, ScrollView } from "react-native";
+import { StyleSheet, TextInput, View, Platform, useWindowDimensions, ScrollView, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import CategoryChip from "@/components/CategoryChip";
 import ArticleCard from "@/components/ArticleCard";
-import CommunityFavorite from "@/components/CommunityFavorite";
-import TopicChip from "@/components/TopicChip";
 import { TabScreenLayout } from '@/components/layouts/TabScreenLayout';
 import { supabase } from '@/lib/supabase';
 import TopicSelector from '@/components/TopicSelector';
 
-// Placeholder data for categories and articles
-const categories = ["Technology", "Science", "Health", "Business", "Entertainment"];
+// Placeholder data for articles
 const articles = [
   {
     id: "1",
@@ -51,33 +46,27 @@ const articles = [
   // Add more placeholder articles as needed
 ];
 
+interface Article {
+  id: string;
+  title: string;
+  description: string;
+  author: string;
+  date: string;
+  readTime: string;
+  views: string;
+  image?: string;
+}
+
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { width } = useWindowDimensions();
   const [hasInterests, setHasInterests] = useState<boolean | null>(null);
+  const [selectedTopicId, setSelectedTopicId] = useState<number | undefined>(undefined);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const isWeb = Platform.OS === "web";
   const isSmallScreen = width < 768;
-
-  const toggleCategory = (category: string) => {
-    setSelectedCategories((prevSelected) =>
-      prevSelected.includes(category) ? prevSelected.filter((c) => c !== category) : [...prevSelected, category],
-    );
-  };
-
-  const renderCategories = () => (
-    <View style={styles.categoriesContainer}>
-      {categories.map((category) => (
-        <CategoryChip
-          key={category}
-          category={category}
-          isSelected={selectedCategories.includes(category)}
-          onToggle={() => toggleCategory(category)}
-        />
-      ))}
-    </View>
-  );
 
   const renderContent = () => (
     <>
@@ -91,7 +80,10 @@ export default function ExploreScreen() {
         />
       </ThemedView>
 
-      {renderCategories()}
+      <TopicSelector 
+        onTopicSelect={handleTopicSelect}
+        selectedTopicId={selectedTopicId}
+      />
 
       {articles.map((item) => (
         <ArticleCard key={item.id} article={item} isWeb={isWeb} isSmallScreen={isSmallScreen} />
@@ -116,9 +108,27 @@ export default function ExploreScreen() {
     }
   };
 
-  const handleTopicSelectComplete = () => {
-    setHasInterests(true);
-    // Additional logic after topics are selected
+  const handleTopicSelect = async (topicId: number) => {
+    setSelectedTopicId(topicId);
+    await fetchArticlesForTopic(topicId);
+  };
+
+  const fetchArticlesForTopic = async (topicId: number) => {
+    setIsLoading(true);
+    try {
+      // Fetch articles related to the selected topic
+      const { data, error } = await supabase
+        .from('feeds')
+        .select('*')
+        .eq('topic_id', topicId);
+
+      if (error) throw error;
+      setArticles(data || []);
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (hasInterests === null) {
@@ -127,21 +137,27 @@ export default function ExploreScreen() {
 
   return (
     <TabScreenLayout>
-      {!hasInterests ? (
-        <TopicSelector onComplete={handleTopicSelectComplete} />
-      ) : (
-        <ThemedView style={styles.container}>
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
-            {isWeb && !isSmallScreen ? (
-              <View style={styles.webContainer}>
-                <View style={styles.webMainContent}>{renderContent()}</View>
+      <ThemedView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {isWeb && !isSmallScreen ? (
+            <View style={styles.webContainer}>
+              <View style={styles.webMainContent}>
+                {isLoading ? (
+                  <ActivityIndicator style={styles.loader} />
+                ) : (
+                  renderContent()
+                )}
               </View>
+            </View>
+          ) : (
+            isLoading ? (
+              <ActivityIndicator style={styles.loader} />
             ) : (
               renderContent()
-            )}
-          </ScrollView>
-        </ThemedView>
-      )}
+            )
+          )}
+        </ScrollView>
+      </ThemedView>
     </TabScreenLayout>
   );
 }
@@ -177,10 +193,9 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
   },
-  categoriesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 16,
-    paddingHorizontal: 16,
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
