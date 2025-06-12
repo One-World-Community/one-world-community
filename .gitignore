@@ -45,3 +45,9 @@ android/.gradle/
 android/.idea/
 android/*.iml
 /.cursor
+
+# Builds
+*.tar.gz
+*.ipa
+*.apk
+*.aab
