@@ -7,12 +7,13 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { supabase } from "@/lib/supabase";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Session } from '@supabase/supabase-js';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState<Session | null>(null);
   const segments = useSegments();
   const router = useRouter();
 
